@@ -1,13 +1,28 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rabbitmq-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  #storageClassName: standard
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq-master
+  name: rabbitmq
   labels:
     app: rabbitmq
 spec:
   type: LoadBalancer
   ports:
   - port: 15672
+    name: web
+  - port: 15692
+    name: metrics
   selector:
     app: rabbitmq
 ---
@@ -30,7 +45,8 @@ spec:
     spec:
       containers:
       - name: master
-        image: rabbitmq:3.8.1-management
+        image: rabbitmq:local
+        imagePullPolicy: IfNotPresent
         env:
         - name: RABBITMQ_DEFAULT_USER
           value: admin
@@ -39,14 +55,11 @@ spec:
         ports:
         - containerPort: 15672
         - containerPort: 5672
+        - containerPort: 15692
         volumeMounts:
-        - name: rabbitmq
+        - name: rabbitmq-data
           mountPath: /var/lib/rabbitmq
-  volumeClaimTemplates:
-  - metadata:
-      name: rabbitmq
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+      volumes:
+      - name: rabbitmq-data
+        persistentVolumeClaim:
+          claimName: rabbitmq-volume
