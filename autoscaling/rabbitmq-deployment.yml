@@ -1,22 +1,32 @@
-apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
-kind: Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-master
+  labels:
+    app: rabbitmq
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 15672
+  selector:
+    app: rabbitmq
+---
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: rabbitmq
   labels:
     app: rabbitmq
 spec:
+  serviceName: rabbitmq
   selector:
     matchLabels:
       app: rabbitmq
-      role: master
-      tier: backend
   replicas: 1
   template:
     metadata:
       labels:
         app: rabbitmq
-        role: master
-        tier: backend
     spec:
       containers:
       - name: master
@@ -29,3 +39,14 @@ spec:
         ports:
         - containerPort: 15672
         - containerPort: 5672
+        volumeMounts:
+        - name: rabbitmq
+          mountPath: /var/lib/rabbitmq
+  volumeClaimTemplates:
+  - metadata:
+      name: rabbitmq
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
