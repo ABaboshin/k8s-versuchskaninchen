@@ -1,7 +1,13 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: prometheus
+  namespace: monitoring
   labels:
     app: prometheus
 spec:
@@ -15,6 +21,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rabbitmq-monitoring
+  namespace: monitoring
   labels:
     app: rabbitmq-monitoring
     role: monitoring
@@ -29,6 +36,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: rabbitmq-monitoring
+  namespace: monitoring
   labels:
     app: rabbitmq-monitoring
     role: monitoring
@@ -43,6 +51,7 @@ spec:
     metadata:
       labels:
         app: rabbitmq-monitoring
+        namespace: monitoring
         role: monitoring
     spec:
       containers:
@@ -57,37 +66,13 @@ spec:
         - name: RABBITMQ_PASSWORD
           value: password
         - name: RABBITMQ_URL
-          value: http://rabbitmq:15672
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: statsd
-  labels:
-    app: statsd
-spec:
-  serviceName: statsd
-  selector:
-    matchLabels:
-      app: statsd
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: statsd
-    spec:
-      containers:
-      - name: master
-        image: prom/statsd-exporter:v0.16.0
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 9102
-        - containerPort: 9125
+          value: http://rabbitmq.rabbitmq:15672
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: prometheus
+  namespace: monitoring
   labels:
     app: prometheus
 spec:
@@ -98,6 +83,7 @@ spec:
   replicas: 1
   template:
     metadata:
+      namespace: monitoring
       labels:
         app: prometheus
     spec:
