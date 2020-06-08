@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 9090
+  selector:
+    app: prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-monitoring
+  labels:
+    app: rabbitmq-monitoring
+    role: monitoring
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 2112
+  selector:
+    app: rabbitmq-monitoring
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq-monitoring
+  labels:
+    app: rabbitmq-monitoring
+    role: monitoring
+spec:
+  serviceName: rabbitmq-monitoring
+  selector:
+    matchLabels:
+      app: rabbitmq-monitoring
+      role: monitoring
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-monitoring
+        role: monitoring
+    spec:
+      containers:
+      - name: master
+        image: rabbitmq-monitoring:local
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 2112
+        env:
+        - name: RABBITMQ_USERNAME
+          value: admin
+        - name: RABBITMQ_PASSWORD
+          value: password
+        - name: RABBITMQ_URL
+          value: http://rabbitmq:15672
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statsd
+  labels:
+    app: statsd
+spec:
+  serviceName: statsd
+  selector:
+    matchLabels:
+      app: statsd
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: statsd
+    spec:
+      containers:
+      - name: master
+        image: prom/statsd-exporter:v0.16.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9102
+        - containerPort: 9125
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+spec:
+  serviceName: prometheus
+  selector:
+    matchLabels:
+      app: prometheus
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: master
+        image: prometheus:local
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
