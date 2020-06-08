@@ -30,6 +30,8 @@ spec:
     name: web
   - port: 15692
     name: metrics
+  - port: 5672
+    name: rabbitmq
   selector:
     app: rabbitmq
 ---

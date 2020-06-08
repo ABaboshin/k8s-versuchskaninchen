@@ -1,0 +1,26 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:55994",
+      "sslPort": 0
+    }
+  },
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "SampleApp": {
+      "commandName": "Project",
+      "launchUrl": "/",
+      "environmentVariables": {
+        "LOG_LEVEL": "Verbose",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "RABBITMQ__HOST": "localhost",
+        "RABBITMQ__USER": "admin",
+        "RABBITMQ__PASSWORD": "password",
+        "RABBITMQ__EnableConsuming": "true"
+      },
+      "applicationUrl": "http://localhost:6000"
+    }
+  }
+}
