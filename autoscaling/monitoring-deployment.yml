@@ -46,7 +46,7 @@ spec:
     matchLabels:
       app: rabbitmq-monitoring
       role: monitoring
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
