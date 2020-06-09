@@ -1,23 +1,48 @@
+# Using prometheus kubernetes operator to autoscale
+
+It is an example of using kubernetes prometheus operator to autoscale the consumer
+based on amount of messages in a rabbitmq queue.
+
+ - Build and start rabbitmq
+
 ```bash
-# rabbitmq
 docker build -t rabbitmq:local -f rabbitmq/Dockerfile rabbitmq
 kubectl apply -f rabbitmq-deployment.yml
+```
+ - Build prometheus, sample exporter for rabbitmq, start them
 
-# prometheus
+```
+
 docker build -t rabbitmq-monitoring:local -f rabbitmq-monitoring/Dockerfile rabbitmq-monitoring
 docker build -t prometheus:local -f prometheus/Dockerfile prometheus
 kubectl apply -f monitoring-deployment.yml
+```
 
-# app
+ - Build producer-consumer and deploy it
+
+```bash
 docker build -t app:local -f app/ProducerConsumer/Dockerfile app/ProducerConsumer
 kubectl apply -f app-deployment.yml
+```
+ - Deploy prometheus operator
 
-# apiserver
-clone and build https://github.com/kubernetes/sample-apiserver
+```bash
 kubectl apply -f metric-deployment.yml
+```
 
-# scaler
+ - Deploy an autoscaler configuration for consumer (scale +1 for every 30 messages in the queue)
+
+```bash
 kubectl apply -f scale-deployment.yml
+```
+ - Produce 10000 messages
 
-curl -XPOST -H 'Content-Type: application/json' http://localhost:8080/api/v1/namespaces/custom-metrics/services/custom-metrics-apiserver:http/proxy/write-metrics/namespaces/app/services/kubernetes/test-metric --data-raw '"90"'
+```bash
+curl http://localhost:5000/api/publish/10000
+```
+
+ - Watch the scaling and cooling down after 5m
+
+```bash
+watch kubectl get hpa -n app
 ```
